@@ -61,12 +61,13 @@ async function seedDefaultAdmin() {
   try {
     const adminCount = await Admin.countDocuments();
     if (adminCount === 0) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'chairperson_acm_2026!';
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
       await Admin.create({
-        username: 'admin',
+        username: 'chairperson@acmiiitu.in',
         password: hashedPassword
       });
-      console.log('Default admin seeded (admin/admin123)');
+      console.log('Default admin seeded (chairperson@acmiiitu.in)');
     }
   } catch (err) {
     console.error('Error seeding default admin:', err);
