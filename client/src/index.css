@@ -1,0 +1,134 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-acm-blue: var(--acm-blue);
+  --color-acm-dark: var(--acm-dark);
+  --color-acm-glow: var(--acm-glow);
+  --color-border-color: var(--border-color);
+  --color-border-subtle: var(--border-subtle);
+  --color-card-bg: var(--card-bg);
+}
+
+/* ───────────── LIGHT MODE ───────────── */
+:root {
+  --bg-primary:     #f2f2f7;
+  --bg-secondary:   #ffffff;
+  --bg-elevated:    #fafafa;
+  --text-primary:   #1c1c1e;
+  --text-secondary: #636366;
+  --text-tertiary:  #aeaeb2;
+  --acm-blue:       #0071e3;
+  --acm-dark:       #0051a8;
+  --acm-glow:       rgba(0, 113, 227, 0.15);
+  --border-color:   #e5e5ea;
+  --border-subtle:  #f2f2f7;
+  --card-bg:        #ffffff;
+
+  --nav-bg:         rgba(255, 255, 255, 0.82);
+  --nav-border:     rgba(0, 0, 0, 0.08);
+}
+
+/* ───────────── DARK MODE ───────────── */
+:root.dark {
+  --bg-primary:     #000000;
+  --bg-secondary:   #0d0d0f;
+  --bg-elevated:    #161618;
+  --text-primary:   #f5f5f7;
+  --text-secondary: #8e8e93;
+  --text-tertiary:  #48484a;
+  --acm-blue:       #0a84ff;
+  --acm-dark:       #0071e3;
+  --acm-glow:       rgba(10, 132, 255, 0.18);
+  --border-color:   #2c2c2e;
+  --border-subtle:  #1c1c1e;
+  --card-bg:        #111113;
+
+  --nav-bg:         rgba(0, 0, 0, 0.82);
+  --nav-border:     rgba(255, 255, 255, 0.08);
+}
+
+/* ───────────── BASE ───────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.4s ease, color 0.4s ease;
+  letter-spacing: -0.01em;
+}
+
+/* ───────────── SCROLLBAR ───────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* ───────────── SELECTION ───────────── */
+::selection {
+  background-color: var(--acm-blue);
+  color: #fff;
+}
+
+/* ───────────── UTILITIES ───────────── */
+.glass-nav {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  border-color: var(--acm-blue) !important;
+}
+:root.dark .card-hover:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.acm-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--acm-blue);
+}
+
+/* ───────────── FADE-IN ANIMATION ───────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Staggered children */
+.stagger > *:nth-child(1) { animation-delay: 0s; }
+.stagger > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger > *:nth-child(3) { animation-delay: 0.2s; }
+.stagger > *:nth-child(4) { animation-delay: 0.3s; }
+.stagger > *:nth-child(5) { animation-delay: 0.4s; }
+.stagger > *:nth-child(6) { animation-delay: 0.5s; }
+.stagger > *:nth-child(7) { animation-delay: 0.6s; }
+.stagger > *:nth-child(8) { animation-delay: 0.7s; }
