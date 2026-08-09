@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const serverless = require('serverless-http');
 require('dotenv').config();
 
 const connect = require('./db/connection');
@@ -22,9 +23,29 @@ const interestGroupRoutes = require('./api/routes/interestGroup.routes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// CORS configuration for local development and Cloudflare Pages
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || origin.endsWith('.pages.dev') || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
+
+// Middleware to ensure DB connection on serverless requests
+app.use(async (req, res, next) => {
+  try {
+    await connect();
+    next();
+  } catch (err) {
+    res.status(500).json({ message: 'Database connection failed' });
+  }
+});
 
 // Routes Registration
 app.use('/api/admin', adminRoutes);
@@ -34,16 +55,6 @@ app.use(teamRoutes);
 app.use(memberRoutes);
 app.use(departmentRoutes);
 app.use(interestGroupRoutes);
-
-// Connect to Database and Seed Defaults
-connect()
-  .then(async () => {
-    await seedDefaultAdmin();
-    await seedDefaultMessages();
-  })
-  .catch(err => {
-    console.error('Database connection failed:', err);
-  });
 
 // Seed default admin if none exists
 async function seedDefaultAdmin() {
@@ -108,6 +119,29 @@ async function seedDefaultMessages() {
   }
 }
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Serverless handler for Cloudflare Workers
+const handler = serverless(app);
+
+module.exports = {
+  fetch: (request, env, ctx) => {
+    if (env) {
+      Object.assign(process.env, env);
+    }
+    return handler(request, env, ctx);
+  }
+};
+
+// Direct Node execution
+if (require.main === module) {
+  connect()
+    .then(async () => {
+      await seedDefaultAdmin();
+      await seedDefaultMessages();
+      app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+      });
+    })
+    .catch(err => {
+      console.error('Database connection failed:', err);
+    });
+}
