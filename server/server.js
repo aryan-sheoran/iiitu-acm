@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const serverless = require('serverless-http');
 require('dotenv').config();
 
 const connect = require('./db/connection');
@@ -43,7 +42,8 @@ app.use(async (req, res, next) => {
     await connect();
     next();
   } catch (err) {
-    res.status(500).json({ message: 'Database connection failed' });
+    console.error("DB connection error in middleware:", err);
+    res.status(500).json({ message: 'Database connection failed', error: err.message });
   }
 });
 
@@ -119,17 +119,7 @@ async function seedDefaultMessages() {
   }
 }
 
-// Serverless handler for Cloudflare Workers
-const handler = serverless(app);
-
-module.exports = {
-  fetch: (request, env, ctx) => {
-    if (env) {
-      Object.assign(process.env, env);
-    }
-    return handler(request, env, ctx);
-  }
-};
+module.exports = app;
 
 // Direct Node execution
 if (require.main === module) {
