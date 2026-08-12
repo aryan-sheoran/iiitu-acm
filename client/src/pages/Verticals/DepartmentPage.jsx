@@ -218,7 +218,6 @@ export default function DepartmentPage() {
               <meta.Icon className="h-6 w-6 text-white" strokeWidth={1.5} />
             </div>
             <div>
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-white/50 block">IIITU ACM</span>
               <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">{department.name}</h1>
             </div>
           </div>
