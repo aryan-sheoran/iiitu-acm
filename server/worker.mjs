@@ -8,6 +8,19 @@ export default {
       Object.assign(process.env, env);
     }
 
+    const requestOrigin = request.headers.get('origin');
+
+    // Handle OPTIONS preflight requests immediately for high performance and guaranteed CORS compliance
+    if (request.method === 'OPTIONS') {
+      const corsHeaders = new Headers();
+      corsHeaders.set('Access-Control-Allow-Origin', requestOrigin || '*');
+      corsHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      corsHeaders.set('Access-Control-Allow-Headers', request.headers.get('access-control-request-headers') || 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+      corsHeaders.set('Access-Control-Allow-Credentials', 'true');
+      corsHeaders.set('Access-Control-Max-Age', '86400');
+      return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
     if (!appInstance) {
       const serverModule = await import('./server.js');
       appInstance = serverModule.default || serverModule;
@@ -67,6 +80,10 @@ export default {
 
         res.on('finish', () => {
           const fullBody = Buffer.concat(responseChunks);
+          if (requestOrigin && !resHeaders.has('access-control-allow-origin')) {
+            resHeaders.set('Access-Control-Allow-Origin', requestOrigin);
+            resHeaders.set('Access-Control-Allow-Credentials', 'true');
+          }
           resolve(new Response(fullBody, {
             status: res.statusCode,
             headers: resHeaders
@@ -77,11 +94,17 @@ export default {
 
         appInstance(req, res);
       } catch (err) {
+        const errHeaders = { 'content-type': 'application/json' };
+        if (requestOrigin) {
+          errHeaders['Access-Control-Allow-Origin'] = requestOrigin;
+          errHeaders['Access-Control-Allow-Credentials'] = 'true';
+        }
         resolve(new Response(JSON.stringify({ error: err.message }), {
           status: 500,
-          headers: { 'content-type': 'application/json' }
+          headers: errHeaders
         }));
       }
     });
   }
 };
+

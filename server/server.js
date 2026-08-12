@@ -25,17 +25,25 @@ const uploadRoutes = require('./api/routes/upload.routes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration for local development and Cloudflare Pages
+// CORS configuration for local development, acmiiitu.in, and Cloudflare Pages
+const allowedOriginPattern = /^(https?:\/\/(.+\.)?acmiiitu\.in|https?:\/\/(.+\.)?pages\.dev|https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/i;
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || origin.endsWith('.pages.dev') || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    if (!origin || allowedOriginPattern.test(origin)) {
       callback(null, true);
     } else {
       callback(null, true);
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
+
+// Enable pre-flight requests for all routes
+app.options('*', cors());
+
 
 app.use(express.json());
 
