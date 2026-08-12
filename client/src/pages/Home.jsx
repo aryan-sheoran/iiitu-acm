@@ -98,8 +98,8 @@ export default function Home() {
             </h2>
           </div>
 
-          {sponsorMsg && <MessageCard msg={sponsorMsg} />}
           {chairmanMsg && <MessageCard msg={chairmanMsg} reversed />}
+          {sponsorMsg && <MessageCard msg={sponsorMsg} />}
         </div>
       )}
     </div>
