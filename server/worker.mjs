@@ -80,9 +80,12 @@ export default {
 
         res.on('finish', () => {
           const fullBody = Buffer.concat(responseChunks);
-          if (requestOrigin && !resHeaders.has('access-control-allow-origin')) {
-            resHeaders.set('Access-Control-Allow-Origin', requestOrigin);
-            resHeaders.set('Access-Control-Allow-Credentials', 'true');
+          const activeOrigin = requestOrigin || '*';
+          if (!resHeaders.has('access-control-allow-origin')) {
+            resHeaders.set('Access-Control-Allow-Origin', activeOrigin);
+            if (requestOrigin) {
+              resHeaders.set('Access-Control-Allow-Credentials', 'true');
+            }
           }
           resolve(new Response(fullBody, {
             status: res.statusCode,
@@ -94,9 +97,12 @@ export default {
 
         appInstance(req, res);
       } catch (err) {
-        const errHeaders = { 'content-type': 'application/json' };
+        const activeOrigin = requestOrigin || '*';
+        const errHeaders = {
+          'content-type': 'application/json',
+          'Access-Control-Allow-Origin': activeOrigin
+        };
         if (requestOrigin) {
-          errHeaders['Access-Control-Allow-Origin'] = requestOrigin;
           errHeaders['Access-Control-Allow-Credentials'] = 'true';
         }
         resolve(new Response(JSON.stringify({ error: err.message }), {
@@ -104,6 +110,7 @@ export default {
           headers: errHeaders
         }));
       }
+
     });
   }
 };

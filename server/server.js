@@ -25,27 +25,22 @@ const uploadRoutes = require('./api/routes/upload.routes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration for local development, acmiiitu.in, and Cloudflare Pages
-const allowedOriginPattern = /^(https?:\/\/(.+\.)?acmiiitu\.in|https?:\/\/(.+\.)?pages\.dev|https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/i;
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOriginPattern.test(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true);
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-}));
-
-// Enable pre-flight requests for all routes
-app.options('*', cors());
-
+// 1. Universal CORS Middleware - Must run FIRST before all routes and DB connection logic
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
 
 app.use(express.json());
+
 
 // Static uploads directory serving
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
