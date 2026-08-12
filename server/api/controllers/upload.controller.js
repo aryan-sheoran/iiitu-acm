@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const sharp = require('sharp');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
@@ -8,6 +7,15 @@ const cloudinary = require('cloudinary').v2;
 cloudinary.config({
   secure: true
 });
+
+// Helper for dynamic sharp loading (prevents esbuild/wrangler from bundling native .node binaries on Cloudflare Workers)
+const getSharp = () => {
+  try {
+    return eval('require')('sharp');
+  } catch (err) {
+    return null;
+  }
+};
 
 // Configure multer memory storage
 const storage = multer.memoryStorage();
@@ -71,6 +79,11 @@ const handleImageUpload = (req, res) => {
       }
 
       // Fallback: Local filesystem storage (for local dev without CLOUDINARY_URL)
+      const sharp = getSharp();
+      if (!sharp) {
+        throw new Error('Local image processing (sharp) is not available. Please configure CLOUDINARY_URL.');
+      }
+
       const uploadsDir = path.join(__dirname, '../../uploads');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
@@ -95,6 +108,7 @@ const handleImageUpload = (req, res) => {
     }
   });
 };
+
 
 module.exports = {
   handleImageUpload
