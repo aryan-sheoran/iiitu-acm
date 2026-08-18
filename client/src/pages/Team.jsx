@@ -141,7 +141,7 @@ export default function Team() {
       <div className="bg-bg-secondary border-b border-border-color">
         <div className="max-w-6xl mx-auto px-8 py-14">
           <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
-            Leadership & Executive Board
+            Leadership & Executive Board 
           </h1>
           <p className="mt-3 text-text-secondary text-sm max-w-lg leading-relaxed">
             Our chapter governance is led by three executive roles: the Elected Board, Internal Affairs, and Interest Group Leads (IGLs).
