@@ -24,30 +24,8 @@ const ResearchIcon = () => (
   </svg>
 );
 
-const devLead = {
-  name: 'Aryan Sheoran',
-  role: 'Full Stack Lead',
-  handle: 'aryan-sheoran',
-  url: 'https://github.com/aryan-sheoran',
-  avatarUrl: 'https://github.com/aryan-sheoran.png',
-};
-
-const devContributors = [
-  {
-    name: 'Narendra Singh Parihar',
-    handle: 'NarendraSinghP',
-    url: 'https://github.com/NarendraSinghP',
-    avatarUrl: 'https://github.com/NarendraSinghP.png',
-    prs: 2,
-  },
-  {
-    name: 'Vishal Rajguru',
-    handle: 'vishal6769',
-    url: 'https://github.com/vishal6769',
-    avatarUrl: 'https://github.com/vishal6769.png',
-    prs: 1,
-  },
-].sort((a, b) => a.name.localeCompare(b.name));
+const REPO_OWNER = 'ysinghc';
+const REPO_NAME = 'iiitu-acm';
 
 function MemberCard({ member, index }) {
   return (
@@ -112,6 +90,10 @@ export default function Team() {
   const [activePane, setActivePane] = useState('executive'); // 'executive' | 'dev'
   const [slideDirection, setSlideDirection] = useState('right'); // 'left' | 'right'
 
+  // GitHub Stats
+  const [devContributors, setDevContributors] = useState([]);
+  const [devLoading, setDevLoading] = useState(true);
+
   const handlePaneChange = (pane) => {
     if (pane === activePane) return;
     setSlideDirection(pane === 'dev' ? 'left' : 'right');
@@ -119,6 +101,7 @@ export default function Team() {
   };
 
   useEffect(() => {
+    // 1. Fetch Executive Board Members
     fetch(`${API}/public/team`)
       .then(r => r.json())
       .then(d => {
@@ -135,6 +118,47 @@ export default function Team() {
         console.error(err);
         setLoading(false);
       });
+
+    // 2. Fetch Live GitHub Contributors & Merged PR Stats
+    const fetchGitHubStats = async () => {
+      try {
+        const [contribRes, prRes] = await Promise.all([
+          fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contributors`),
+          fetch(`https://api.github.com/search/issues?q=repo:${REPO_OWNER}/${REPO_NAME}+is:pr+is:merged`),
+        ]);
+
+        const contribData = await contribRes.json();
+        const prData = await prRes.json();
+
+        // Calculate merged PR count per GitHub handle
+        const prCounts = {};
+        if (prData && Array.isArray(prData.items)) {
+          prData.items.forEach(item => {
+            const handle = item.user?.login;
+            if (handle) {
+              prCounts[handle] = (prCounts[handle] || 0) + 1;
+            }
+          });
+        }
+
+        if (Array.isArray(contribData)) {
+          const list = contribData.map(c => ({
+            handle: c.login,
+            url: c.html_url,
+            avatarUrl: c.avatar_url,
+            prs: prCounts[c.login] || 0,
+          })).sort((a, b) => a.handle.localeCompare(b.handle)); // ascending order by handle
+
+          setDevContributors(list);
+        }
+      } catch (err) {
+        console.error('Error fetching GitHub API contributors:', err);
+      } finally {
+        setDevLoading(false);
+      }
+    };
+
+    fetchGitHubStats();
   }, []);
 
   if (loading) {
@@ -168,12 +192,12 @@ export default function Team() {
 
   return (
     <div className="bg-bg-primary min-h-screen transition-colors duration-300">
-      {/* Page Header matching original height (py-14) with button to switch panes */}
+      {/* Page Header matching height with button to switch panes */}
       <div className="bg-bg-secondary border-b border-border-color">
         <div className="max-w-6xl mx-auto px-8 py-14 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
-              {activePane === 'executive' ? 'Leadership & Executive Board' : 'Development Team'}
+              {activePane === 'executive' ? 'Leadership & Executive Board' : 'Leadership & Executive Board'}
             </h1>
             <p className="mt-3 text-text-secondary text-sm max-w-lg leading-relaxed">
               {activePane === 'executive'
@@ -282,74 +306,56 @@ export default function Team() {
               </div>
             </div>
           ) : (
-            /* Dev Team Pane */
-            <div className="max-w-4xl mx-auto space-y-10">
-              {/* Full Stack Lead */}
-              <div>
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
-                  Full Stack Lead
-                </h2>
-                <div className="bg-card-bg border border-border-color rounded-xl p-5 flex items-center gap-4">
-                  <img
-                    src={devLead.avatarUrl}
-                    alt={devLead.name}
-                    className="w-12 h-12 rounded-full object-cover border border-border-color"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold text-text-primary truncate">{devLead.name}</h3>
-                    <p className="text-xs text-text-secondary">{devLead.role}</p>
-                  </div>
-                  <a
-                    href={devLead.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-elevated border border-border-color text-xs font-mono text-acm-blue hover:bg-acm-blue/10 transition-colors"
-                  >
-                    <GitHubIcon /> @{devLead.handle}
-                  </a>
-                </div>
-              </div>
-
-              {/* Contributors Table */}
+            /* Dev Team Pane — Live GitHub API Data */
+            <div className="max-w-4xl mx-auto space-y-8">
               <div>
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
                   Codebase Contributors
                 </h2>
-                <div className="bg-card-bg border border-border-color rounded-xl overflow-hidden">
-                  <div className="grid grid-cols-12 gap-4 px-5 py-2.5 bg-bg-elevated border-b border-border-color text-[11px] font-medium text-text-tertiary uppercase">
-                    <div className="col-span-6 sm:col-span-7">Contributor</div>
-                    <div className="col-span-4 sm:col-span-3">GitHub</div>
-                    <div className="col-span-2 sm:col-span-2 text-right">Merged PRs</div>
+
+                {devLoading ? (
+                  <div className="flex items-center justify-center py-12 bg-card-bg border border-border-color rounded-xl">
+                    <div className="w-6 h-6 border-2 border-acm-blue border-t-transparent rounded-full animate-spin mr-3" />
+                    <span className="text-xs text-text-secondary">Fetching GitHub contributors…</span>
                   </div>
-                  {devContributors.map((c) => (
-                    <div
-                      key={c.handle}
-                      className="grid grid-cols-12 gap-4 px-5 py-3 items-center border-b border-border-subtle last:border-0 hover:bg-bg-elevated/50 transition-colors text-xs"
-                    >
-                      <div className="col-span-6 sm:col-span-7 flex items-center gap-3">
-                        <img
-                          src={c.avatarUrl}
-                          alt={c.name}
-                          className="w-6 h-6 rounded-full object-cover border border-border-color"
-                        />
-                        <span className="font-medium text-text-primary truncate">{c.name}</span>
-                      </div>
-                      <div className="col-span-4 sm:col-span-3">
-                        <a
-                          href={c.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-mono text-acm-blue hover:underline"
-                        >
-                          @{c.handle}
-                        </a>
-                      </div>
-                      <div className="col-span-2 sm:col-span-2 text-right font-mono text-text-secondary">
-                        {c.prs}
-                      </div>
+                ) : devContributors.length === 0 ? (
+                  <div className="p-8 text-center bg-card-bg border border-border-color rounded-xl text-xs text-text-secondary">
+                    No contributors fetched from GitHub.
+                  </div>
+                ) : (
+                  <div className="bg-card-bg border border-border-color rounded-xl overflow-hidden shadow-sm">
+                    <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-bg-elevated border-b border-border-color text-[11px] font-bold text-text-tertiary uppercase tracking-wider">
+                      <div className="col-span-8 sm:col-span-9">GitHub Handle</div>
+                      <div className="col-span-4 sm:col-span-3 text-right">Merged PRs</div>
                     </div>
-                  ))}
-                </div>
+
+                    {devContributors.map((c) => (
+                      <div
+                        key={c.handle}
+                        className="grid grid-cols-12 gap-4 px-5 py-3.5 items-center border-b border-border-subtle last:border-0 hover:bg-bg-elevated/40 transition-colors text-xs"
+                      >
+                        <div className="col-span-8 sm:col-span-9 flex items-center gap-3">
+                          <img
+                            src={c.avatarUrl}
+                            alt={c.handle}
+                            className="w-7 h-7 rounded-full object-cover border border-border-color"
+                          />
+                          <a
+                            href={c.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-xs font-semibold text-acm-blue hover:underline inline-flex items-center gap-1.5"
+                          >
+                            @{c.handle}
+                          </a>
+                        </div>
+                        <div className="col-span-4 sm:col-span-3 text-right font-mono text-xs font-semibold text-text-primary">
+                          {c.prs}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
