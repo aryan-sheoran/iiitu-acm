@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { API } from '../utils/apiURL';
 
 const GitHubIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg className="h-4 w-4 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
     <path d="M9 18c-4.51 2-5-2-7-2" />
   </svg>
@@ -23,6 +23,31 @@ const ResearchIcon = () => (
     <path d="M6 10h10" />
   </svg>
 );
+
+const devLead = {
+  name: 'Aryan Sheoran',
+  role: 'Full Stack Lead',
+  handle: 'aryan-sheoran',
+  url: 'https://github.com/aryan-sheoran',
+  avatarUrl: 'https://github.com/aryan-sheoran.png',
+};
+
+const devContributors = [
+  {
+    name: 'Narendra Singh Parihar',
+    handle: 'NarendraSinghP',
+    url: 'https://github.com/NarendraSinghP',
+    avatarUrl: 'https://github.com/NarendraSinghP.png',
+    prs: 2,
+  },
+  {
+    name: 'Vishal Rajguru',
+    handle: 'vishal6769',
+    url: 'https://github.com/vishal6769',
+    avatarUrl: 'https://github.com/vishal6769.png',
+    prs: 1,
+  },
+].sort((a, b) => a.name.localeCompare(b.name));
 
 function MemberCard({ member, index }) {
   return (
@@ -84,12 +109,19 @@ function MemberCard({ member, index }) {
 export default function Team() {
   const [team, setTeam] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activePane, setActivePane] = useState('executive'); // 'executive' | 'dev'
+  const [slideDirection, setSlideDirection] = useState('right'); // 'left' | 'right'
+
+  const handlePaneChange = (pane) => {
+    if (pane === activePane) return;
+    setSlideDirection(pane === 'dev' ? 'left' : 'right');
+    setActivePane(pane);
+  };
 
   useEffect(() => {
     fetch(`${API}/public/team`)
       .then(r => r.json())
       .then(d => {
-        // Sort by order ascending if provided, then by name
         const sorted = [...d].sort((a, b) => {
           const orderA = a.order ?? 99;
           const orderB = b.order ?? 99;
@@ -116,7 +148,6 @@ export default function Team() {
     );
   }
 
-  // Filter based on explicit database category field, falling back to role text matching for legacy records
   const isInternalAffairs = (member) => {
     if (member.category === 'internal_affairs') return true;
     if (member.category && member.category !== 'internal_affairs') return false;
@@ -137,78 +168,189 @@ export default function Team() {
 
   return (
     <div className="bg-bg-primary min-h-screen transition-colors duration-300">
-      {/* Page Header */}
+      {/* Page Header matching original height (py-14) with button to switch panes */}
       <div className="bg-bg-secondary border-b border-border-color">
-        <div className="max-w-6xl mx-auto px-8 py-14">
-          <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
-            Leadership & Executive Board 
-          </h1>
-          <p className="mt-3 text-text-secondary text-sm max-w-lg leading-relaxed">
-            Our chapter governance is led by three executive roles: the Elected Board, Internal Affairs, and Interest Group Leads (IGLs).
-          </p>
+        <div className="max-w-6xl mx-auto px-8 py-14 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
+              {activePane === 'executive' ? 'Leadership & Executive Board' : 'Development Team'}
+            </h1>
+            <p className="mt-3 text-text-secondary text-sm max-w-lg leading-relaxed">
+              {activePane === 'executive'
+                ? 'Our chapter governance is led by three executive roles: the Elected Board, Internal Affairs, and Interest Group Leads (IGLs).'
+                : 'Core technical leadership and open-source codebase contributors powering IIITU ACM.'}
+            </p>
+          </div>
+
+          {/* Switcher Partition / Buttons */}
+          <div className="flex-shrink-0 self-start md:self-center">
+            <div className="inline-flex p-1 bg-bg-elevated border border-border-color rounded-xl">
+              <button
+                onClick={() => handlePaneChange('executive')}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+                  activePane === 'executive'
+                    ? 'bg-acm-blue text-white shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Leadership
+              </button>
+              <button
+                onClick={() => handlePaneChange('dev')}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+                  activePane === 'dev'
+                    ? 'bg-acm-blue text-white shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Development Team
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-8 py-14 space-y-16">
-        {/* 1. Elected Board */}
-        <div>
-          <div className="mb-8">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">ACM Chartered Roles</span>
-            <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Elected Board</h2>
-            <p className="text-xs text-text-secondary mt-1">Mandated officers elected in accordance with ACM Chapter bylaws.</p>
-          </div>
-          {chartered.length === 0 ? (
-            <p className="text-xs text-text-secondary italic">No elected board members found.</p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 stagger">
-              {chartered.map((member, i) => (
-                <MemberCard key={member._id} member={member} index={i} />
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Main Content Container with Smooth Left / Right Slide Animations */}
+      <div className="max-w-6xl mx-auto px-8 py-14">
+        <div
+          key={activePane}
+          className={slideDirection === 'left' ? 'animate-slide-left' : 'animate-slide-right'}
+        >
+          {activePane === 'executive' ? (
+            <div className="space-y-16">
+              {/* 1. Elected Board */}
+              <div>
+                <div className="mb-8">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">ACM Chartered Roles</span>
+                  <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Elected Board</h2>
+                  <p className="text-xs text-text-secondary mt-1">Mandated officers elected in accordance with ACM Chapter bylaws.</p>
+                </div>
+                {chartered.length === 0 ? (
+                  <p className="text-xs text-text-secondary italic">No elected board members found.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 stagger">
+                    {chartered.map((member, i) => (
+                      <MemberCard key={member._id} member={member} index={i} />
+                    ))}
+                  </div>
+                )}
+              </div>
 
-        {/* 2. Internal Affairs */}
-        <div>
-          <div className="mb-8">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Chapter Governance</span>
-            <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Internal Affairs</h2>
-            <p className="text-xs text-text-secondary mt-1 max-w-2xl leading-relaxed">
-              Handles internal chapter operations, decorum, and resolves complaints or feedback from chapter members, IIITU students, or faculty.
-            </p>
-          </div>
-          {internalAffairs.length === 0 ? (
-            <div className="p-6 bg-card-bg border border-border-color rounded-2xl max-w-2xl text-left space-y-2">
-              <p className="text-xs text-text-secondary leading-relaxed">
-                The <span className="font-semibold text-text-primary">Internal Affairs team</span> oversees chapter standards, conflict resolution, and internal coordination.
-              </p>
-              <p className="text-[11px] text-text-tertiary">
-                Any issues or grievances raised by IIITU students, faculty, or chapter members are reviewed confidentially by this division.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 stagger">
-              {internalAffairs.map((member, i) => (
-                <MemberCard key={member._id} member={member} index={i + chartered.length} />
-              ))}
-            </div>
-          )}
-        </div>
+              {/* 2. Internal Affairs */}
+              <div>
+                <div className="mb-8">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Chapter Governance</span>
+                  <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Internal Affairs</h2>
+                  <p className="text-xs text-text-secondary mt-1 max-w-2xl leading-relaxed">
+                    Handles internal chapter operations, decorum, and resolves complaints or feedback from chapter members, IIITU students, or faculty.
+                  </p>
+                </div>
+                {internalAffairs.length === 0 ? (
+                  <div className="p-6 bg-card-bg border border-border-color rounded-2xl max-w-2xl text-left space-y-2">
+                    <p className="text-xs text-text-secondary leading-relaxed">
+                      The <span className="font-semibold text-text-primary">Internal Affairs team</span> oversees chapter standards, conflict resolution, and internal coordination.
+                    </p>
+                    <p className="text-[11px] text-text-tertiary">
+                      Any issues or grievances raised by IIITU students, faculty, or chapter members are reviewed confidentially by this division.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 stagger">
+                    {internalAffairs.map((member, i) => (
+                      <MemberCard key={member._id} member={member} index={i + chartered.length} />
+                    ))}
+                  </div>
+                )}
+              </div>
 
-        {/* 3. Interest Group Leads (IGL) */}
-        <div>
-          <div className="mb-8">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Domain Leads</span>
-            <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Interest Group Leads (IGLs)</h2>
-            <p className="text-xs text-text-secondary mt-1">Appointed leads directing technical project verticals, study groups, and research focus areas.</p>
-          </div>
-          {clubAppointees.length === 0 ? (
-            <p className="text-xs text-text-secondary italic">No interest group leads found.</p>
+              {/* 3. Interest Group Leads (IGL) */}
+              <div>
+                <div className="mb-8">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Domain Leads</span>
+                  <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Interest Group Leads (IGLs)</h2>
+                  <p className="text-xs text-text-secondary mt-1">Appointed leads directing technical project verticals, study groups, and research focus areas.</p>
+                </div>
+                {clubAppointees.length === 0 ? (
+                  <p className="text-xs text-text-secondary italic">No interest group leads found.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 stagger">
+                    {clubAppointees.map((member, i) => (
+                      <MemberCard key={member._id} member={member} index={i + chartered.length + internalAffairs.length} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 stagger">
-              {clubAppointees.map((member, i) => (
-                <MemberCard key={member._id} member={member} index={i + chartered.length + internalAffairs.length} />
-              ))}
+            /* Dev Team Pane */
+            <div className="max-w-4xl mx-auto space-y-10">
+              {/* Full Stack Lead */}
+              <div>
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
+                  Full Stack Lead
+                </h2>
+                <div className="bg-card-bg border border-border-color rounded-xl p-5 flex items-center gap-4">
+                  <img
+                    src={devLead.avatarUrl}
+                    alt={devLead.name}
+                    className="w-12 h-12 rounded-full object-cover border border-border-color"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold text-text-primary truncate">{devLead.name}</h3>
+                    <p className="text-xs text-text-secondary">{devLead.role}</p>
+                  </div>
+                  <a
+                    href={devLead.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-elevated border border-border-color text-xs font-mono text-acm-blue hover:bg-acm-blue/10 transition-colors"
+                  >
+                    <GitHubIcon /> @{devLead.handle}
+                  </a>
+                </div>
+              </div>
+
+              {/* Contributors Table */}
+              <div>
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
+                  Codebase Contributors
+                </h2>
+                <div className="bg-card-bg border border-border-color rounded-xl overflow-hidden">
+                  <div className="grid grid-cols-12 gap-4 px-5 py-2.5 bg-bg-elevated border-b border-border-color text-[11px] font-medium text-text-tertiary uppercase">
+                    <div className="col-span-6 sm:col-span-7">Contributor</div>
+                    <div className="col-span-4 sm:col-span-3">GitHub</div>
+                    <div className="col-span-2 sm:col-span-2 text-right">Merged PRs</div>
+                  </div>
+                  {devContributors.map((c) => (
+                    <div
+                      key={c.handle}
+                      className="grid grid-cols-12 gap-4 px-5 py-3 items-center border-b border-border-subtle last:border-0 hover:bg-bg-elevated/50 transition-colors text-xs"
+                    >
+                      <div className="col-span-6 sm:col-span-7 flex items-center gap-3">
+                        <img
+                          src={c.avatarUrl}
+                          alt={c.name}
+                          className="w-6 h-6 rounded-full object-cover border border-border-color"
+                        />
+                        <span className="font-medium text-text-primary truncate">{c.name}</span>
+                      </div>
+                      <div className="col-span-4 sm:col-span-3">
+                        <a
+                          href={c.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-mono text-acm-blue hover:underline"
+                        >
+                          @{c.handle}
+                        </a>
+                      </div>
+                      <div className="col-span-2 sm:col-span-2 text-right font-mono text-text-secondary">
+                        {c.prs}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
